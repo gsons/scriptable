@@ -121,9 +121,21 @@ class Widget extends Base {
   }
 
   getDateData(res) {
-    const time_arr = [
+
+    //励志楼
+    const time_arr1 = [
       ['08:20', '09:55'], ['10:10', '11:45'], ['14:00', '15:35'], ['15:50', '17:25'], ['18:45', '21:20'], ['12:00', '13:50']
     ]
+
+    //其他楼
+    const time_arr2 = [
+      ['08:20', '09:55'], ['10:25', '12:00'], ['14:00', '15:35'], ['16:00', '17:35'], ['18:45', '21:20'], ['12:00', '13:50']
+    ]
+
+    //let time_arr=time_arr1;
+
+    // console.log(res);
+
     let date_start = res.date, t = -1, res_list = [];
     const str = `${date_start}`;
     const t0 = new Date(str).getTime();
@@ -134,10 +146,16 @@ class Widget extends Base {
       }
       let date0 = new Date(t0 + day * 24 * 60 * 60 * 1000);
       date0 = this.dateFormat('yyyy/MM/dd', date0);
+      let isLiZhi=true;
+      //存在地点为NULL的情况
+      if(res.data[r]&&typeof res.data[r][6]=='string'){
+        // console.log(res.data[r][6]);
+        isLiZhi=(res.data[r][6].indexOf('励志楼')>-1);
+      }
       let json = {
         date: date0,
         week: res.week,
-        time: time_arr[t],
+        time:isLiZhi?time_arr1[t]:time_arr2[t],
         course: res.data[r]
       };
       res_list.push(json);
@@ -147,6 +165,8 @@ class Widget extends Base {
         return new Date(da).getTime() - new Date(db).getTime()
       });
     }
+
+    console.log(res_list);
     return res_list;
   }
 
