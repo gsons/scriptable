@@ -1,13 +1,18 @@
 // Variables used by Scriptable.
 // These must be at the very top of the file. Do not edit.
-// icon-color: cyan; icon-glyph: magic;
-
+// icon-color: orange; icon-glyph: comments;
+// 
+// iOS 桌面组件脚本 @「小件件」
+// 开发说明：请从 Widget 类开始编写，注释请勿修改
+// https://x.im3x.cn
+// 
 if (typeof require === 'undefined') require = importModule
 const { Base } = require("./「小件件」开发环境")
 
 
 // @组件代码开始
 class Widget extends Base {
+
   /**
    * 传递给组件的参数，可以是桌面 Parameter 数据，也可以是外部如 URLScheme 等传递的数据
    * @param {string} arg 自定义参数
@@ -16,116 +21,26 @@ class Widget extends Base {
     super(arg);
     this.name = '广华商课程表';
     this.desc = '广州华商学院课程表信息';
+    this.cookie = this.getCookie(arg);
+    // this.setCache('test',{name:this.name},30);
+    console.log(this.getCache('test'));
     this.registerAction("登录广华商教务系统", this.actionLogin);
-    this.cookie = this.getCookie();
+
   }
 
-  
-  getCookie(){
-    if (Keychain.contains("gsonhub_cache_course_cookie")) { 
+
+  getCookie(param = '') {
+    if (Keychain.contains("gsonhub_cache_course_cookie")) {
       let str = Keychain.get("gsonhub_cache_course_cookie");
       return str;
     }
-    return 'JSESSIONID=F1AD6D4BDA6FA73FC0231F61A118DB7A; SERVERID=123';
-  }
- 
-
-  async actionLogin() {
-
-    //获取cookie
-    let req = new Request("http://jwxt.gdhsc.edu.cn/jsxsd/xk/LoginToXk");
-    req.method = "POST";
-    await req.loadString();
-    this.cookie = '';
-    req.response.cookies.forEach(vo => {
-      this.cookie += `${vo['name']}=${vo['value']}; `
-    });
-    console.log(this.cookie);
-
-    req = new Request('http://jwxt.gdhsc.edu.cn/jsxsd/verifycode.servlet')
-    req.headers = {
-      'Cookie': this.cookie,
-    }
-    const img = await req.loadImage()
-
-    QuickLook.present(img);
-    let alert = new Alert();
-    alert.title = '广华商教务系统';
-    alert.message = '登录广州华商学院教务一体化系统'
-    alert.addTextField('请输入账号', '421450251');
-    alert.addSecureTextField('请输入密码');
-    alert.addTextField('请输入验证码');
-    alert.addAction('登录');
-    alert.addCancelAction('取消');
-    let res = await alert.presentAlert();//-1 取消 0确定
-    const userAccount = alert.textFieldValue(0);
-    const userPassword = alert.textFieldValue(1);
-    const code = alert.textFieldValue(2);
-    if (res === 0) {
-      console.log('执行登录')
-      await this.doLogin(userAccount, userPassword, code);
-    }else{
-      console.log('执行取消')
-    }
+    //默认获取桌面 Parameter 数据
+    return param;
   }
 
-
-  encodeInp(input) {
-    var keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
-    var output = "";
-    var chr1, chr2, chr3 = "";
-    var enc1, enc2, enc3, enc4 = "";
-    var i = 0;
-    do {
-      chr1 = input.charCodeAt(i++);
-      chr2 = input.charCodeAt(i++);
-      chr3 = input.charCodeAt(i++);
-      enc1 = chr1 >> 2;
-      enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
-      enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
-      enc4 = chr3 & 63;
-      if (isNaN(chr2)) {
-        enc3 = enc4 = 64
-      } else if (isNaN(chr3)) {
-        enc4 = 64
-      }
-      output = output + keyStr.charAt(enc1) + keyStr.charAt(enc2) + keyStr.charAt(enc3) + keyStr.charAt(enc4);
-      chr1 = chr2 = chr3 = "";
-      enc1 = enc2 = enc3 = enc4 = ""
-    } while (i < input.length);
-    return output
-  }
-
-
-  async doLogin(userAccount, userPassword, code) {
-    const url = "http://jwxt.gdhsc.edu.cn/jsxsd/xk/LoginToXk";
-    const login = new Request(url);
-    login.method = "POST";
-    login.headers = {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'Cookie': this.cookie,
-    }
-
-    const encoded = encodeURIComponent(this.encodeInp(userAccount) + `%%%` + this.encodeInp(userPassword));
-    login.body = `loginMethod=LoginToXk&userAccount=${userAccount}&userPassword=&RANDOMCODE=${code}&encoded=${encoded}`;
-    let res = await login.loadString();
-
-    let error = /"showMsg">	 (.*?)</.exec(res);
-    if (error && error[1]) {
-      this.notify("登录失败", "登录失败！"+error[1],'');
-      console.log(error[1]);
-    } else {
-      console.log('登录成功！' + this.cookie);
-      Keychain.set("gsonhub_cache_course_cookie",this.cookie);
-      this.notify("登录成功", "登录凭证已保存！"+this.cookie,'');
-    }
-  }
-
-  // this.notify("登录成功", "登录凭证已保存！可以关闭当前登录页面了！")
 
   /**
    * 渲染函数，函数名固定
-   * 可以根据 this.widgetFamily 来判断小组件尺寸，以返回不同大小的内容
    */
   async render() {
     let data;
@@ -133,7 +48,7 @@ class Widget extends Base {
       data = await this.getInitData();
     } catch (error) {
       let w = new ListWidget();
-      const tt = w.addText('登录已失效，请点我登录广华商教务系统');
+      const tt = w.addText('登录已失效，请点我登陆广华商教务系统');
       tt.textColor = new Color("#e00")
       tt.font = Font.boldSystemFont(12)
       console.log(error);
@@ -190,28 +105,22 @@ class Widget extends Base {
     return fmt
   }
 
+
   async getInitData() {
-    let res_arr = await this.getData();
-    // console.log(res_arr);
-    let week = this.getCurrentWeek(res_arr);
-    this.week = week + 1; //
+    let res_arr = await this.getWeekData();
     let list = [];
-    if (res_arr[week]) {
-      list = list.concat(this.getDayData(res_arr[week]));
-    }
-    if (res_arr[week + 1]) {
-      list = list.concat(this.getDayData(res_arr[week + 1]));
-    }
+    res_arr.forEach(res => {
+      list = list.concat(this.getDateData(res));
+    });
 
     let date = new Date();
     let currenDate = this.dateFormat('yyyy/MM/dd', date);
     let nextDate = this.dateFormat('yyyy/MM/dd', new Date(date.setDate(date.getDate() + 1)));
     list = list.filter((vo) => { return (vo.date == currenDate || vo.date == nextDate) && vo.course; });
-
     return list;
   }
 
-  getDayData(res) {
+  getDateData(res) {
     const time_arr = [
       ['08:20', '09:55'], ['10:10', '11:45'], ['14:00', '15:35'], ['15:50', '17:25'], ['18:45', '21:20'], ['12:00', '13:50']
     ]
@@ -223,12 +132,8 @@ class Widget extends Base {
       if (day == 0) {
         t++;
       }
-
-      // console.log(t0);
       let date0 = new Date(t0 + day * 24 * 60 * 60 * 1000);
-
       date0 = this.dateFormat('yyyy/MM/dd', date0);
-
       let json = {
         date: date0,
         week: res.week,
@@ -239,25 +144,12 @@ class Widget extends Base {
       res_list = res_list.sort((a, b) => {
         const da = `${a.date} ${a.time[0]}`;
         const db = `${b.date} ${b.time[0]}`;
-        // console.log(da+'=='+db);
         return new Date(da).getTime() - new Date(db).getTime()
       });
     }
     return res_list;
   }
 
-  getCurrentWeek(res_arr) {
-    let list = [];
-    for (let i = 0; i < res_arr.length; i++) {
-      const res = res_arr[i];
-      const ttt = new Date().getTime();
-      const limit = new Date(`${res['date']} 00:00:00`).getTime();
-      if (ttt > limit && ttt < (limit + 7 * 24 * 60 * 60 * 1000 - 1)) {
-        return i;
-      }
-    }
-    throw new Error('未获取到本周课程数据');
-  }
 
   async fetchWeekCourseByDate(body, date) {
     let [, sjmsValue] = /class="layui-this" data-value="([0-9a-zA-Z]+)"/.exec(body);
@@ -270,28 +162,36 @@ class Widget extends Base {
     return res;
   }
 
-  async getData() {
-    if (Keychain.contains("gsonhub_cache_course")) {
-      let str = Keychain.get("gsonhub_cache_course");
-      try {
-        //return JSON.parse(str);
-      } catch (error) {
 
-      }
+  //获取接下来两周的数据
+  async getWeekData() {
+
+    //获取缓存数据  
+    let course_list=this.getCache('course_list');
+    if(course_list){
+      console.log('从缓存获取到课程数据!');
+      return course_list;
     }
 
     let body = await this.doHttpGet("http://jwxt.gdhsc.edu.cn/jsxsd/framework/xsMainV_new.htmlx?t1=1");
-
     let date_arr = body.match(/<option value="([0-9-_]+)"[^>]*>(.*?)<\/option>/g);
     date_arr = date_arr.map(str => { const temp = /<option value="([0-9-_]+)"[^>]*>(.*?)<\/option>/.exec(str); return temp[1] });
 
-    let res_arr = [];
     let len = date_arr.length;
+    let week = len;
+    let now = new Date().getTime();
+    for (let i = 0; i < date_arr.length; i++) {
+      let date = date_arr[i].replace(/\-/g, '\/');
+      let limit = new Date(`${date} 00:00:00`).getTime();
+      if (now > limit && now < (limit + 7 * 24 * 60 * 60 * 1000 - 1)) {
+        week = i;
+      }
+    }
 
-    //todo
+    // console.log(week.toFixed());
 
-    
-    for (let w = 6; w < 9; w++) {
+    let res_arr = [];
+    for (let w = week; w < len && w < (week + 2); w++) {
       let date = date_arr[w];
       const data = await this.fetchWeekCourseByDate(body, date);
       let json = {
@@ -301,9 +201,12 @@ class Widget extends Base {
       };
       res_arr.push(json);
     }
-    if (res_arr.length > 0) Keychain.set("gsonhub_cache_course", JSON.stringify(res_arr));
-    return res_arr;
 
+    // console.log(res_arr);
+    if (res_arr.length > 0) {
+       this.setCache('course_list',res_arr,30*60);
+    } 
+    return res_arr;
   }
 
 
@@ -453,13 +356,112 @@ class Widget extends Base {
     return w
   }
 
-
-
   /**
    * 渲染大尺寸组件
    */
   async renderLarge(list) {
     return await this.renderMedium(list)
+  }
+
+
+
+  async actionLogin() {
+    try {
+      await this.showLoginUi();
+    } catch (error) {
+      this.notify('系统错误，登录失败！', error);
+    }
+  }
+
+  async showLoginUi() {
+    //获取cookie
+    let req = new Request("http://jwxt.gdhsc.edu.cn/jsxsd/xk/LoginToXk");
+    req.method = "POST";
+    await req.loadString();
+    this.cookie = '';
+    req.response.cookies.forEach(vo => {
+      this.cookie += `${vo['name']}=${vo['value']}; `
+    });
+    console.log(this.cookie);
+
+    //通过cookie获取图片二维码
+    req = new Request('http://jwxt.gdhsc.edu.cn/jsxsd/verifycode.servlet')
+    req.headers = {
+      'Cookie': this.cookie,
+    }
+    const img = await req.loadImage()
+    QuickLook.present(img);
+
+    //展示登录界面
+    let alert = new Alert();
+    alert.title = '广华商教务系统';
+    alert.message = '登录广州华商学院教务一体化系统'
+    alert.addTextField('请输入账号');
+    alert.addSecureTextField('请输入密码');
+    alert.addTextField('请输入验证码');
+    alert.addAction('登录');
+    alert.addCancelAction('取消');
+    let res = await alert.presentAlert();//-1 取消 0确定
+    const userAccount = alert.textFieldValue(0);
+    const userPassword = alert.textFieldValue(1);
+    const code = alert.textFieldValue(2);
+    if (res === 0) {
+      console.log('执行登录')
+      await this.doLogin(userAccount, userPassword, code);
+    } else {
+      console.log('执行取消')
+    }
+  }
+
+  //加密登录用户密码数据
+  encodeInp(input) {
+    var keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+    var output = "";
+    var chr1, chr2, chr3 = "";
+    var enc1, enc2, enc3, enc4 = "";
+    var i = 0;
+    do {
+      chr1 = input.charCodeAt(i++);
+      chr2 = input.charCodeAt(i++);
+      chr3 = input.charCodeAt(i++);
+      enc1 = chr1 >> 2;
+      enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
+      enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
+      enc4 = chr3 & 63;
+      if (isNaN(chr2)) {
+        enc3 = enc4 = 64
+      } else if (isNaN(chr3)) {
+        enc4 = 64
+      }
+      output = output + keyStr.charAt(enc1) + keyStr.charAt(enc2) + keyStr.charAt(enc3) + keyStr.charAt(enc4);
+      chr1 = chr2 = chr3 = "";
+      enc1 = enc2 = enc3 = enc4 = ""
+    } while (i < input.length);
+    return output
+  }
+
+
+  async doLogin(userAccount, userPassword, code) {
+    const url = "http://jwxt.gdhsc.edu.cn/jsxsd/xk/LoginToXk";
+    const login = new Request(url);
+    login.method = "POST";
+    login.headers = {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Cookie': this.cookie,
+    }
+    const encoded = encodeURIComponent(this.encodeInp(userAccount) + `%%%` + this.encodeInp(userPassword));
+    login.body = `loginMethod=LoginToXk&userAccount=${userAccount}&userPassword=&RANDOMCODE=${code}&encoded=${encoded}`;
+    let res = await login.loadString();
+
+    let error = /"showMsg">	 (.*?)</.exec(res);
+    if (error && error[1]) {
+      this.notify("登录失败", "登录失败！" + error[1], '');
+      console.log(error[1]);
+    } else {
+      console.log('登录成功！' + this.cookie);
+      Keychain.set("gsonhub_cache_course_cookie", this.cookie);
+      this.notify("登录成功", "登录凭证已保存！" + this.cookie, '');
+    }
   }
 
 
@@ -471,7 +473,42 @@ class Widget extends Base {
     Safari.openInApp(url, false)
   }
 
+  /**
+   * 
+   * @param  _key 
+   * @param  val 
+   * @param  expire //单位秒
+   */
+  setCache(_key,val,expire=0){
+    let key=`gsonhub_ghs_cache_${_key}`; 
+    let obj={
+       data:val,
+       expire:new Date().getTime()+expire*1000
+    }
+    Keychain.set(key,JSON.stringify(obj));
+  }
+
+  getCache(_key){
+    let key=`gsonhub_ghs_cache_${_key}`; 
+    if (Keychain.contains(key)) {
+      let str = Keychain.get(key);
+      // console.log(str);
+      try {
+        let obj=JSON.parse(str);
+        if(obj.expire&&obj.expire>new Date().getTime()){
+           return obj.data;
+        }else{
+          Keychain.remove(key);
+        }
+      } catch (error) {
+
+      }
+    }
+    return false;
+  }
+
 }
+
 
 // @组件代码结束
 const { Testing } = require("./「小件件」开发环境")
