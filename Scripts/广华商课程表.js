@@ -224,7 +224,8 @@ class Widget extends Base {
 
     // console.log(res_arr);
     if (res_arr.length > 0) {
-       this.setCache('course_list',res_arr,30*60);
+       //缓存6天
+       this.setCache('course_list',res_arr,6*24*60*60);
     } 
     return res_arr;
   }
