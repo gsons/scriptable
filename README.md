@@ -21,3 +21,8 @@ npm start
 
 <img src="https://raw.githubusercontent.com/gsons/gsons.github.io/master/demo/scriptable_dwk.jpg" width='350'> 
 
+# 下载并导入至scriptable
+
+在发布页面下载scriptable文件 [https://github.com/gsons/scriptable/releases](https://github.com/gsons/scriptable/releases)
+
+下载完后选中在scripttable打开文件，添加脚本
