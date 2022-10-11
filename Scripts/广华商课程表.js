@@ -232,6 +232,7 @@ class Widget extends Base {
 
 
   rowText(w, opt) {
+    if(typeof opt.text!=='string') return;
     const stack = w.addStack();
     if (opt.icon) {
       const icon = SFSymbol.named(opt.icon);
