@@ -288,13 +288,13 @@ class Widget extends Base {
 
 
   rowText(w, opt) {
-    if (typeof opt.text !== 'string') return;
+    if (typeof opt.text !== 'string'||opt.text==='') return;
     const stack = w.addStack();
     if (opt.icon) {
       const icon = SFSymbol.named(opt.icon);
       icon.applyHeavyWeight();
       const img = stack.addImage(icon.image);
-      img.tintColor = new Color(opt.color, 1);
+      img.tintColor = new Color(opt.color, 1); 
       img.imageSize = new Size(opt.size + 1, opt.size + 1);
     }
 
