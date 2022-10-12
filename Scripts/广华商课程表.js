@@ -19,7 +19,7 @@ class Widget extends Base {
    */
   constructor(arg) {
     super(arg);
-    this.name = '广华商课程表';
+    this.name = '广华商课程表dev'; 
     this.desc = '广州华商学院课程表信息';
     this.cookie = this.getCookie(arg);
 
@@ -212,7 +212,15 @@ class Widget extends Base {
     body = await this.doHttpGet(url);
     const preg = /<p>(.*?)<\/p><p>(.*?)<\/p><span class=[^>]+>(.*?)<\/span><\/span><div class=[^>]+><p>(.*?)<\/p><div class=[^>]+><span>(.*?)<\/span><span>(.*?)<\/span><\/div><div><span><img src=[^>]+>(.*)?<\/span><span><img src=[^>]+>(.*)?<\/span>/;
     let arr = body.match(/<td align="left">(\r\n.*\r\n.*\r\n.*\r\n.*)<\/td>/g);
-    let res = arr.map(str => { return preg.test(str) ? preg.exec(str).slice(1) : false; });
+    let res = arr.map(str => { 
+      if( preg.test(str)){
+         let _arr=preg.exec(str).slice(1);
+         //将null值替换为''
+         return _arr.map((v)=>{return v??''});
+      }else{
+        return false;
+      }
+     });
     return res;
   }
 
@@ -466,8 +474,10 @@ class Widget extends Base {
     let alert = new Alert();
     alert.title = '广华商教务系统';
     alert.message = '登录广州华商学院教务一体化系统'
-    alert.addTextField('请输入账号');
-    alert.addSecureTextField('请输入密码');
+    let account=this.getCache('account');
+    //console.log(account);
+    alert.addTextField('请输入账号',account?account:'').setNumberPadKeyboard();
+    alert.addSecureTextField('请输入密码'); 
     alert.addTextField('请输入验证码');
     alert.addAction('登录');
     alert.addCancelAction('取消');
@@ -476,6 +486,7 @@ class Widget extends Base {
     const userPassword = alert.textFieldValue(1);
     const code = alert.textFieldValue(2);
     if (res === 0) {
+      this.setCache('account',userAccount);
       console.log('执行登录')
       await this.doLogin(userAccount, userPassword, code);
     } else {
@@ -532,6 +543,7 @@ class Widget extends Base {
       Keychain.set("gsonhub_cache_course_cookie", this.cookie);
       this.clearCache('course_list');//删除缓存的课程数据
       this.notify("登录成功", "登录凭证已保存！" + this.cookie, '');
+      this.renderPresentAction('small');
     }
   }
 
@@ -554,7 +566,7 @@ class Widget extends Base {
     let key = `gsonhub_ghs_cache_${_key}`;
     let obj = {
       data: val,
-      expire: new Date().getTime() + expire * 1000
+      expire: expire===0?expire:( new Date().getTime() + expire * 1000)
     }
     Keychain.set(key, JSON.stringify(obj));
   }
@@ -571,7 +583,7 @@ class Widget extends Base {
       // console.log(str);
       try {
         let obj = JSON.parse(str);
-        if (obj.expire && obj.expire > new Date().getTime()) {
+        if ((obj.expire && obj.expire > new Date().getTime())||obj.expire===0) {
           return obj.data;
         } else {
           Keychain.remove(key);
@@ -580,7 +592,7 @@ class Widget extends Base {
 
       }
     }
-    return false;
+    return null;
   }
 
 }
