@@ -182,7 +182,7 @@ class Widget extends Base {
       date0 = this.dateFormat('yyyy/MM/dd', date0);
       let isLiZhi = true;
       //存在地点为NULL的情况
-      if (res.data[r] && typeof res.data[r][6] == 'string') {
+      if (res.data[r] && typeof res.data[r][6] == 'string'&& res.data[r][6]!='') {
         // console.log(res.data[r][6]);
         isLiZhi = (res.data[r][6].indexOf('励志楼') > -1);
       }
