@@ -22,10 +22,27 @@ class Widget extends Base {
     this.name = '广华商课程表';
     this.desc = '广州华商学院课程表信息';
     this.cookie = this.getCookie(arg);
-    // this.setCache('test',{name:this.name},30);
-    console.log(this.getCache('test'));
-    this.registerAction("登录广华商教务系统", this.actionLogin);
 
+    this.registerAction("登录广华商教务系统", this.actionLogin);
+    this.registerAction("预览小组件small", this.renderPresentAction);
+  }
+
+  renderPresentAction(size = 'small') {
+    this.widgetFamily = size;
+    (async (size) => {
+      let w = await this.render();
+      switch (size) {
+        case 'large':
+          await w.presentLarge();
+          break;
+        case 'medium':
+          await w.presentMedium()
+          break;
+        default:
+          await w.presentSmall();
+          break;
+      }
+    })(size).then();
   }
 
 
@@ -49,6 +66,15 @@ class Widget extends Base {
     } catch (error) {
       let w = new ListWidget();
       const tt = w.addText('登录已失效，请点我登陆广华商教务系统');
+      tt.textColor = new Color("#e00")
+      tt.font = Font.boldSystemFont(12)
+      console.log(error);
+      return w;
+    }
+
+    if (!data) {
+      let w = new ListWidget();
+      const tt = w.addText('课程数据为空，请点我尝试登陆广华商教务系统刷新课程数据，如果放假就不需要刷新了');
       tt.textColor = new Color("#e00")
       tt.font = Font.boldSystemFont(12)
       console.log(error);
@@ -106,8 +132,16 @@ class Widget extends Base {
   }
 
 
+  /**
+   * 
+   * @returns false:代表课程数据为空 空数组代表两天内没课
+   */
   async getInitData() {
     let res_arr = await this.getWeekData();
+    if (res_arr.length == 0) {
+      return false;
+    }
+
     let list = [];
     res_arr.forEach(res => {
       list = list.concat(this.getDateData(res));
@@ -146,16 +180,16 @@ class Widget extends Base {
       }
       let date0 = new Date(t0 + day * 24 * 60 * 60 * 1000);
       date0 = this.dateFormat('yyyy/MM/dd', date0);
-      let isLiZhi=true;
+      let isLiZhi = true;
       //存在地点为NULL的情况
-      if(res.data[r]&&typeof res.data[r][6]=='string'){
+      if (res.data[r] && typeof res.data[r][6] == 'string') {
         // console.log(res.data[r][6]);
-        isLiZhi=(res.data[r][6].indexOf('励志楼')>-1);
+        isLiZhi = (res.data[r][6].indexOf('励志楼') > -1);
       }
       let json = {
         date: date0,
         week: res.week,
-        time:isLiZhi?time_arr1[t]:time_arr2[t],
+        time: isLiZhi ? time_arr1[t] : time_arr2[t],
         course: res.data[r]
       };
       res_list.push(json);
@@ -166,7 +200,7 @@ class Widget extends Base {
       });
     }
 
-    console.log(res_list);
+    // console.log(res_list);
     return res_list;
   }
 
@@ -187,10 +221,12 @@ class Widget extends Base {
   async getWeekData() {
 
     //获取缓存数据  
-    let course_list=this.getCache('course_list');
-    if(course_list){
-      console.log('从缓存获取到课程数据!');
+    let course_list = this.getCache('course_list');
+    if (course_list) {
+      console.log('从缓存获取到课程表数据!');
       return course_list;
+    } else {
+      this.notify('注意', '正在尝试后台刷新课程表数据', '');
     }
 
     let body = await this.doHttpGet("http://jwxt.gdhsc.edu.cn/jsxsd/framework/xsMainV_new.htmlx?t1=1");
@@ -202,6 +238,7 @@ class Widget extends Base {
     let now = new Date().getTime();
     for (let i = 0; i < date_arr.length; i++) {
       let date = date_arr[i].replace(/\-/g, '\/');
+
       let limit = new Date(`${date} 00:00:00`).getTime();
       if (now > limit && now < (limit + 7 * 24 * 60 * 60 * 1000 - 1)) {
         week = i;
@@ -211,28 +248,39 @@ class Widget extends Base {
     // console.log(week.toFixed());
 
     let res_arr = [];
-    for (let w = week; w < len && w < (week + 2); w++) {
+
+    let max_date = this.dateFormat('yyyy/MM/dd');
+    for (let w = week; w < len && w < (week + 4); w++) {
       let date = date_arr[w];
       const data = await this.fetchWeekCourseByDate(body, date);
+      date = date.replace(/\-/g, '\/');
       let json = {
-        date: date.replace(/\-/g, '\/'),
+        date: date,
         data: data,
         week: w + 1,
       };
       res_arr.push(json);
+      data.forEach((v, i) => {
+        let the_date = this.dateFormat('yyyy/MM/dd', new Date(date).getTime() + (i % 7) * 24 * 60 * 60 * 1000);
+        if (v && new Date(the_date) > new Date(max_date)) {
+          max_date = the_date;
+        }
+      });
     }
 
-    // console.log(res_arr);
     if (res_arr.length > 0) {
-       //缓存6天
-       this.setCache('course_list',res_arr,6*24*60*60);
-    } 
+      let tt = new Date(`${max_date} 23:59:59`).getTime() - new Date().getTime();
+      this.setCache('course_list', res_arr, tt / 1000);
+    } else {
+      //当没有课程数据时 可能放假了
+      this.setCache('course_list', res_arr, 7 * 24 * 60 * 60);
+    }
     return res_arr;
   }
 
 
   rowText(w, opt) {
-    if(typeof opt.text!=='string') return;
+    if (typeof opt.text !== 'string') return;
     const stack = w.addStack();
     if (opt.icon) {
       const icon = SFSymbol.named(opt.icon);
@@ -482,6 +530,7 @@ class Widget extends Base {
     } else {
       console.log('登录成功！' + this.cookie);
       Keychain.set("gsonhub_cache_course_cookie", this.cookie);
+      this.clearCache('course_list');//删除缓存的课程数据
       this.notify("登录成功", "登录凭证已保存！" + this.cookie, '');
     }
   }
@@ -501,25 +550,30 @@ class Widget extends Base {
    * @param  val 
    * @param  expire //单位秒
    */
-  setCache(_key,val,expire=0){
-    let key=`gsonhub_ghs_cache_${_key}`; 
-    let obj={
-       data:val,
-       expire:new Date().getTime()+expire*1000
+  setCache(_key, val, expire = 0) {
+    let key = `gsonhub_ghs_cache_${_key}`;
+    let obj = {
+      data: val,
+      expire: new Date().getTime() + expire * 1000
     }
-    Keychain.set(key,JSON.stringify(obj));
+    Keychain.set(key, JSON.stringify(obj));
   }
 
-  getCache(_key){
-    let key=`gsonhub_ghs_cache_${_key}`; 
+  clearCache(_key) {
+    let key = `gsonhub_ghs_cache_${_key}`;
+    Keychain.remove(key);
+  }
+
+  getCache(_key) {
+    let key = `gsonhub_ghs_cache_${_key}`;
     if (Keychain.contains(key)) {
       let str = Keychain.get(key);
       // console.log(str);
       try {
-        let obj=JSON.parse(str);
-        if(obj.expire&&obj.expire>new Date().getTime()){
-           return obj.data;
-        }else{
+        let obj = JSON.parse(str);
+        if (obj.expire && obj.expire > new Date().getTime()) {
+          return obj.data;
+        } else {
           Keychain.remove(key);
         }
       } catch (error) {
