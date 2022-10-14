@@ -385,6 +385,20 @@ class Widget extends Base {
       headerStack.addSpacer();
       const logo = headerStack.addImage(await this.getImageByUrl(this.logo));
       logo.imageSize = new Size(415 * this.logoScale*0.7, 125 * this.logoScale*0.7);
+
+      headerStack.addSpacer(5);
+      
+      const updateStack=headerStack.addStack();
+      // const updataIcon = SFSymbol.named('arrow.2.circlepath');
+      // updataIcon.applyHeavyWeight();
+      // const updateImg = updateStack.addImage(updataIcon.image);
+      // updateImg.tintColor = new Color('#d7000f', 0.6);
+      // updateImg.imageSize = new Size(10, 10);
+      // updateStack.addSpacer(1);
+      const updateText = updateStack.addText(`${this.arrUpdateTime[2]}:${this.arrUpdateTime[3]}`)
+      updateText.font = Font.mediumSystemFont(10);
+      updateText.textColor = new Color('#d7000f', 0.6);
+
       headerStack.addSpacer();
       w.addSpacer();
   
