@@ -15,8 +15,9 @@ const { Base } = require("./「小件件」开发环境")
 class Widget extends Base {
   constructor(arg) {
     super(arg);
-    this.name = '中国联通';
-    this.en = 'ChinaUnicom_2021';
+    this.name = '腾讯大王卡';
+    this.desc = '腾讯大王卡流量監控'
+    this.en = 'ChinaUnicom_dwk';
     this.logo = 'https://pic.imgdb.cn/item/630ec91116f2c2beb17590da.png';
     this.verticalLogo = 'https://pic.imgdb.cn/item/630ecac516f2c2beb1766cd4.png';
   }
