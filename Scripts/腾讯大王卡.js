@@ -15,9 +15,8 @@ const { Base } = require("./「小件件」开发环境")
 class Widget extends Base {
   constructor(arg) {
     super(arg);
-    this.name = '腾讯大王卡';
-    this.desc = '腾讯大王卡流量監控'
-    this.en = 'ChinaUnicom_dwk';
+    this.name = '中国联通';
+    this.en = 'ChinaUnicom_2021';
     this.logo = 'https://pic.imgdb.cn/item/630ec91116f2c2beb17590da.png';
     this.verticalLogo = 'https://pic.imgdb.cn/item/630ecac516f2c2beb1766cd4.png';
   }
@@ -380,6 +379,7 @@ class Widget extends Base {
       bodyStack.addSpacer(7);
       this.textLayout(bodyStack, this.point);
     } else {
+      this.smallPadding=14;
       w.setPadding(this.smallPadding, this.smallPadding, this.smallPadding, this.smallPadding);
       
       const headerStack = w.addStack();
@@ -454,7 +454,7 @@ class Widget extends Base {
       percent: percent.toFixed(0),
       title: '本日F流量',
       title_free: '本日已免',
-      number: (data.fee_flow_limit-data.one_day_fee_flow).toFixed(1),
+       number:(data.fee_flow_limit-data.one_day_fee_flow).toFixed(1),
       number_free:data.one_day_free_flow.toFixed(0),
       unit: 'MB',
       en: 'MB',
