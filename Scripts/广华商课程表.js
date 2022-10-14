@@ -352,6 +352,11 @@ class Widget extends Base {
         }
       }
 
+      //今天课程已经上完并且今天的课程大于3门课就显示后三门课
+      if(list.length>3){
+        list = list.slice(list.length-3, list.length);
+      }
+
       const today = this.dateFormat('yyyy/MM/dd');
       for (let i = 0; i < list.length; i++) {
         let obj = list[i];
