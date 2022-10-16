@@ -20,10 +20,11 @@ class Widget extends Base {
         this.en = 'jindouyun';
         this.logo = 'https://pic.imgdb.cn/item/630ec91116f2c2beb17590da.png';
         this.verticalLogo = 'https://pic.imgdb.cn/item/630ecac516f2c2beb1766cd4.png';
+        this.cookie = this.getCache('cookie');
     }
 
     widgetParam = args.widgetParameter;
-    cookie = ''; // 推荐使用Boxjs代理缓存，若无请自行手动抓包后在此输入中国联通cookie数据。
+    cookie = ''; // 
 
     gradient = false;
 
@@ -380,37 +381,40 @@ class Widget extends Base {
             bodyStack.addSpacer(7);
             this.textLayout(bodyStack, this.point);
         } else {
-            this.smallPadding=14;
+            this.smallPadding = 14;
             w.setPadding(this.smallPadding, this.smallPadding, this.smallPadding, this.smallPadding);
 
             const headerStack = w.addStack();
             headerStack.addSpacer();
-            const title=headerStack.addText("筋斗云");
-            title.font=Font.mediumSystemFont(14);
+            const title = headerStack.addText("筋斗云");
+            title.font = Font.mediumSystemFont(14);
             //const logo = headerStack.addImage(await this.getImageByUrl(this.logo));
             //logo.imageSize = new Size(415 * this.logoScale * 0.7, 125 * this.logoScale * 0.7);
-            headerStack.addSpacer(5);
+            headerStack.addSpacer(2);
 
-            const updateStack = headerStack.addStack();
-            const updataIcon = SFSymbol.named('checkmark.icloud');
-            updataIcon.applyHeavyWeight();
-            const updateImg = updateStack.addImage(updataIcon.image);
-            updateImg.tintColor = this.is_check_in?new Color('#007b36',1):new Color('#999', 0.6);
-            updateImg.imageSize = new Size(12, 12);
-            updateStack.addSpacer(1);
-            const updateText = updateStack.addText(`${this.arrUpdateTime[2]}:${this.arrUpdateTime[3]}`)
+            const signStack = headerStack.addStack();
+            const signIcon = SFSymbol.named('checkmark.icloud');
+            signIcon.applyHeavyWeight();
+            const signImg = signStack.addImage(signIcon.image);
+            signImg.tintColor = this.is_check_in ? new Color('#007b36', 1) : new Color('#999', 0.6);
+            signImg.imageSize = new Size(19, 19);
+            signStack.addSpacer(1);
+            const updateText = signStack.addText(`${this.arrUpdateTime[2]}:${this.arrUpdateTime[3]}`)
             updateText.font = Font.mediumSystemFont(10);
             updateText.textColor = new Color('#d7000f', 0.6);
-
             headerStack.addSpacer();
-            w.addSpacer();
 
+            w.addSpacer(3);
+
+            const usStack = w.addStack();
+            this.smallTextLayout(usStack, { icon: 'person.2.wave.2', iconColor: new Color('#007b36'), number_free: this.online_user, unit: '人', title_free: '在线用户' });
+            w.addSpacer(3);
             const flow1Stack = w.addStack();
             this.smallTextLayout(flow1Stack, this.flow_day);
-            w.addSpacer(5);
+            w.addSpacer(3);
             const flow2Stack = w.addStack();
             this.smallTextLayout(flow2Stack, this.flow_month);
-            w.addSpacer(5);
+            w.addSpacer(3);
             const flow3Stack = w.addStack();
             this.smallTextLayout(flow3Stack, this.flow_all);
             w.addSpacer();
@@ -425,6 +429,7 @@ class Widget extends Base {
         }
         return w;
     };
+
 
     smallTextLayout(stack, data) {
         this.textSize = 12;
@@ -478,6 +483,7 @@ class Widget extends Base {
         if (data.ret) {
             console.log('登陆成功');
             this.cookie = req.response.cookies.map(item => `${item.name}=${item.value}`).join('; ');
+            this.setCache('cookie', this.cookie);
         } else {
             console.log('登陆失败，' + data.msg);
         }
@@ -490,7 +496,7 @@ class Widget extends Base {
         const checkinreqest = {
             url: url.replace(/(auth|user)\/login(.php)*/g, '') + checkinPath,
             headers: {
-                // 'cookie': this.cookie,
+                'cookie': this.cookie,
                 'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
                 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36 Edg/105.0.1343.42'
             }
@@ -507,6 +513,7 @@ class Widget extends Base {
             console.log('系统错误：' + error)
         }
         if (data.ret) {
+            this.notify('签到成功', str, '');
             console.log('签到成功');
         } else {
             console.log('签到失败，' + data.msg);
@@ -517,8 +524,8 @@ class Widget extends Base {
     async fetchHomeHtml() {
         const url = "https://www.somersaultcloud.xyz/user";
         const req = new Request(url);
-        req.headers= {
-            // 'cookie': this.cookie,
+        req.headers = {
+            'cookie': this.cookie,
             'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36 Edg/105.0.1343.42'
         }
         const html = await req.loadString();
@@ -527,29 +534,31 @@ class Widget extends Base {
 
 
     async fetchJindouyun(html) {
-        let [,used_flow_month,used_flow_month_unit]=/trafficDountChat\(\n\s+'(\d+\.*\d+)(GB|MB|KB)/.exec(html);
-        let [,expire_date]=/(\d{4}-\d{2}-\d{2}) 过期/.exec(html);
-        let isCheck=/"far fa-calendar-check"><\/i> 明日再来<\/a>/.test(html)
+        let [, expire_day] = /<span class="counter">(\d+)<\/span> 天/.exec(html);
+        let [, used_flow_month, used_flow_month_unit] = /trafficDountChat\(\n\s+'(\d+\.*\d+)(GB|MB|KB)/.exec(html);
+        let [, expire_date] = /(\d{4}-\d{2}-\d{2}) 过期/.exec(html);
+        let isCheck = /"far fa-calendar-check"><\/i> 明日再来<\/a>/.test(html)
         let [, remain_flow, remain_flow_unit] = /<h4>剩余流量<\/h4>\n\s+<\/div>\n\s+<div class="card-body">\n\s+<span class="counter">(.*)?<\/span> (MB|GB|KB)/.exec(html);
         let [, online, sum] = /<h4>同时在线设备数<\/h4>\n\s+<\/div>\n\s+<div class="card-body">\n\s+<span class="counter">(\d+)<\/span> \/ <span class="counterup">(\d+)<\/span>/.exec(html);
-        let [, used_flow_day,used_flow_day_unit] = /今日已用: (\d+\.*\d+)(MB|GB|KB)<\/li>/.exec(html);
+        let [, used_flow_day, used_flow_day_unit] = /今日已用: (\d+\.*\d+)(MB|GB|KB)<\/li>/.exec(html);
         let [, last_used_date] = /上次使用时间: (.*?)<\/li>/.exec(html);
         let [, momey] = /<h4>钱包余额<\/h4>\n\s+<\/div>\n\s+<div class="card-body">\n\s+¥\s+<span class="counter">(.*)?<\/span>/.exec(html);
         let [, commission] = /累计获得返利金额: ¥(.*?)<\/li>/.exec(html);
 
-        if(!isCheck){
-           let res= await this.doCheckin();
-           if(res.ret){
-              isCheck =true;
-           }
+        if (!isCheck) {
+            let res = await this.doCheckin();
+            if (res.ret) {
+                isCheck = true;
+            }
         }
         let res = {
-            is_check_in:isCheck,
-            expire_date:expire_date,
+            is_check_in: isCheck,
+            expire_date: expire_date,
+            expire_day: expire_day,
             remain_flow: remain_flow,
-            remain_flow_unit:remain_flow_unit,
-            used_flow_month:used_flow_month,
-            used_flow_month_unit:used_flow_month_unit,
+            remain_flow_unit: remain_flow_unit,
+            used_flow_month: used_flow_month,
+            used_flow_month_unit: used_flow_month_unit,
             online: online,
             sum: sum,
             used_flow_day: used_flow_day,
@@ -561,51 +570,50 @@ class Widget extends Base {
         return res;
     }
 
-    async initJdy(isTry=true){
-        const html=await this.fetchHomeHtml();
+    async initJdy(isTry = true) {
         try {
-            let obj=this.fetchJindouyun(html);
+            const html = await this.fetchHomeHtml();
+            let obj = await this.fetchJindouyun(html);
             return obj;
         } catch (error) {
-            console.log('抓取失败，'+error);
+            console.log('抓取失败，' + error);
         }
-        if(isTry){
+        if (isTry) {
             console.log('尝试重新登陆');
-            await this.doLogin();
-            return await this.initJdy(false); 
-        }else{
+            try {
+                await this.doLogin();
+            } catch (error) {
+                console.error('登陆异常：' + error);
+            }
+            return await this.initJdy(false);
+        } else {
             return false;
         }
     }
 
-    convertMb(num,unit){
-        if(unit==='GB'){
-            return  Math.ceil(num*1024);
+    convertMb(num, unit) {
+        if (unit === 'GB') {
+            return Math.ceil(num * 1024);
         }
-        else if(unit==='KB'){
-            return Math.ceil(num/1024);
+        else if (unit === 'KB') {
+            return Math.ceil(num / 1024);
         }
         return Math.ceil(num);
     }
 
     async initData() {
+        const obj = await this.initJdy();
+        if (!obj) return false;
+        console.log(obj);
 
-        let obj
-        try {
-            obj=await this.initJdy();
-            console.log(obj);
-        } catch (error) {
-            console.log(error);
-            return false;
-        }
+        this.is_check_in = obj.is_check_in;
+        this.online_user = obj.online;
 
-        this.is_check_in=obj.is_check_in;
-
-        let remain_flow=this.convertMb(obj.remain_flow%100,obj.remain_flow_unit);
-        let used_flow_month=this.convertMb(obj.used_flow_month,obj.used_flow_month_unit);
-        let used_flow_day=this.convertMb(obj.used_flow_day,obj.used_flow_day_unit);
-        console.log([remain_flow,used_flow_month,used_flow_day])
-        let percent = used_flow_day/(1024/30);
+        let remain_flow = this.convertMb(obj.remain_flow % 100, obj.remain_flow_unit);
+        let used_flow_month = this.convertMb(obj.used_flow_month, obj.used_flow_month_unit);
+        let used_flow_day = this.convertMb(obj.used_flow_day, obj.used_flow_day_unit);
+        console.log([remain_flow, used_flow_month, used_flow_day])
+        let percent = used_flow_day / (1024 / 30);
         this.flow_day = {
             percent: percent.toFixed(0),
             title: '本日F流量',
@@ -621,15 +629,15 @@ class Widget extends Base {
             colors: [],
         };
 
-        percent = used_flow_month/1024;
+        percent = used_flow_month / 1024;
         this.flow_month = {
             percent: percent.toFixed(0),
             title: '本月F流量',
             title_free: '本月已用',
-            number: used_flow_month.toFixed(0),
-            number_free: used_flow_month.toFixed(0),
-            unit: 'MB',
-            en: 'MB',
+            number: (used_flow_month / 1024).toFixed(1),
+            number_free: (used_flow_month / 1024).toFixed(1),
+            unit: 'GB',
+            en: 'GB',
             icon: 'antenna.radiowaves.left.and.right',
             iconColor: new Color('F86527'),
             FGColor: new Color('F86527'),
@@ -638,12 +646,14 @@ class Widget extends Base {
         };
 
         // percent = data.used_flow * 100 / 40960;
+
+        const remain_flow_month = Math.abs(obj.remain_flow - (Math.floor(obj.expire_day / 30) * 100)).toFixed(0);
         this.flow_all = {
             percent: 0,
             title: '本月总流量',
-            title_free: '本月总流量',
-            number: obj.remain_flow,
-            number_free: obj.remain_flow,
+            title_free: '本月流量剩',
+            number: remain_flow_month,
+            number_free: remain_flow_month,
             unit: 'GB',
             en: 'GB',
             icon: 'antenna.radiowaves.left.and.right',
@@ -652,6 +662,7 @@ class Widget extends Base {
             BGColor: new Color('d7000f', 0.2),
             colors: [],
         };
+        return true;
     }
 
     renderMedium = async (w) => {
@@ -714,9 +725,20 @@ class Widget extends Base {
         return null;
     }
 
+
+    
+    /**
+     * 自定义注册点击事件，用 actionUrl 生成一个触发链接，点击后会执行下方对应的 action
+     * @param {string} url 打开的链接
+     */
+     async actionOpenUrl(url) {
+        Safari.openInApp(url, false)
+    }
+
     async render() {
         const widget = new ListWidget();
-        await this.initData();
+        let res = await this.initData();
+        if (!res) return widget;
         if (this.widgetFamily === 'medium') {
             return await this.renderMedium(widget);
         } else if (this.widgetFamily === 'large') {
