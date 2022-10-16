@@ -452,7 +452,7 @@ class Widget extends Base {
         title: '筋斗云',
         url: 'https://www.somersaultcloud.xyz/auth/login',
         email: 'qq976955017@gmail.com',
-        password: 'hellohao123',
+        password: '',
     };
 
 
