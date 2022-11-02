@@ -1,3 +1,7 @@
+/**
+ * 自动登录签到领取VPN流量,请在 [PFVPN官网注册账号](https://purefast.net/),并把账号信息写在pfvpn.js文件，把修改后的代码复制到clash的Mixin的JavaScript执行。
+ */
+
 module.exports.parse = async ({ content, name, url }, { yaml, axios, notify }) => {
 
     const $fs = require('fs');

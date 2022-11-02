@@ -2,7 +2,11 @@
 
 ## 功能说明
 
-> 广州华商学院课程表
+## PFVPN
+
+> 自动登录签到领取VPN流量,请在 [PFVPN官网注册账号](https://purefast.net/),并把账号信息写在pfvpn.js文件，把修改后的代码复制到clash的Mixin的JavaScript执行。
+
+## 广州华商学院课程表
 
 ### 安装
 ```
@@ -29,7 +33,4 @@ npm start
 * 预览小组件
 
 <img src="https://raw.githubusercontent.com/gsons/gsons.github.io/master/demo/scriptable_ghs.jpg" width='350'> 
-
-
-
 
