@@ -407,14 +407,20 @@ class Widget extends Base {
             w.addSpacer(3);
 
             const usStack = w.addStack();
-            this.smallTextLayout(usStack, { icon: 'person.2.wave.2', iconColor: new Color('#007b36'), number_free: this.online_user, unit: '人', title_free: '在线用户' });
+            this.smallTextLayout(usStack, this.online_user);
             w.addSpacer(3);
+
+            // const expirStack = w.addStack();
+            // this.smallTextLayout(expirStack, this.expire_data);
+            // w.addSpacer(3);
+
             const flow1Stack = w.addStack();
             this.smallTextLayout(flow1Stack, this.flow_day);
             w.addSpacer(3);
             const flow2Stack = w.addStack();
             this.smallTextLayout(flow2Stack, this.flow_month);
             w.addSpacer(3);
+
             const flow3Stack = w.addStack();
             this.smallTextLayout(flow3Stack, this.flow_all);
             w.addSpacer();
@@ -451,7 +457,7 @@ class Widget extends Base {
     account = {
         title: '筋斗云',
         url: 'https://www.somersaultcloud.xyz/auth/login',
-        email: 'qq976955017@gmail.com',
+        email: 'q6955017@gmail.com',
         password: '',
     };
 
@@ -513,7 +519,7 @@ class Widget extends Base {
             console.log('系统错误：' + error)
         }
         if (data.ret) {
-            this.notify('签到成功', str, '');
+            this.notify('签到成功', data.msg, '');
             console.log('签到成功');
         } else {
             console.log('签到失败，' + data.msg);
@@ -607,7 +613,13 @@ class Widget extends Base {
         console.log(obj);
 
         this.is_check_in = obj.is_check_in;
-        this.online_user = obj.online;
+        this.online_user = { 
+            icon: 'person.2.wave.2', 
+            iconColor: new Color('#007b36'), 
+            number_free: obj.online, 
+            unit: `人•${obj.expire_day%30+1}d`, 
+            title_free: '在线用户' 
+        };
 
         let remain_flow = this.convertMb(obj.remain_flow % 100, obj.remain_flow_unit);
         let used_flow_month = this.convertMb(obj.used_flow_month, obj.used_flow_month_unit);
@@ -619,7 +631,7 @@ class Widget extends Base {
             title: '本日F流量',
             title_free: '本日已用',
             number: used_flow_day.toFixed(0),
-            number_free: used_flow_day.toFixed(0),
+            number_free:used_flow_day.toFixed(0),
             unit: 'MB',
             en: 'MB',
             icon: 'antenna.radiowaves.left.and.right',
@@ -644,17 +656,24 @@ class Widget extends Base {
             BGColor: new Color('F86527', 0.2),
             colors: [],
         };
+        
+        this.expire_data = { 
+            icon: 'timer', 
+            iconColor: new Color('#F86527'), 
+            number_free: obj.expire_day%30+1, 
+            unit: '天', 
+            title_free: '有效期剩' 
+        };
 
-        // percent = data.used_flow * 100 / 40960;
 
-        const remain_flow_month = Math.abs(obj.remain_flow - (Math.floor(obj.expire_day / 30) * 100)).toFixed(0);
+        const remain_flow_month = Math.abs(obj.remain_flow - (Math.floor(obj.expire_day / 30)* 100)).toFixed(0);
         this.flow_all = {
             percent: 0,
             title: '本月总流量',
             title_free: '本月流量剩',
             number: remain_flow_month,
             number_free: remain_flow_month,
-            unit: 'GB',
+            unit: `GB`,
             en: 'GB',
             icon: 'antenna.radiowaves.left.and.right',
             iconColor: new Color('d7000f'),
