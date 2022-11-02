@@ -14,8 +14,8 @@ module.exports.parse = async ({ content, name, url }, { yaml, axios, notify }) =
 
         opt = {
             url: 'https://purefast.net/',
-            email: '976955017@gmail.com',
-            password: '',
+            email: 'qq17318145454@gmail.com',
+            password: 'helloqq17318145454',
         };
 
         log(msg) {
@@ -124,7 +124,8 @@ module.exports.parse = async ({ content, name, url }, { yaml, axios, notify }) =
                 url: exe_url[1]
             });
             let data = yaml.parse(res.data);
-            return data.proxies;
+            let proxy_arr=data.proxies.map((vo)=>{vo.name='PFVPN-'+vo.name;return vo});
+            return proxy_arr;
         }
 
         async doCheckin() {
