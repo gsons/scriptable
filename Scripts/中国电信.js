@@ -17,8 +17,8 @@ class Widget extends Base {
     super(arg);
     this.name = '中国联通';
     this.en = 'ChinaUnicom_2021';
-    this.logo = 'https://pic.imgdb.cn/item/630ec91116f2c2beb17590da.png';
-    this.verticalLogo = 'https://pic.imgdb.cn/item/630ecac516f2c2beb1766cd4.png';
+    this.logo = 'https://pic.imgdb.cn/item/630ec97116f2c2beb175c0f2.png';
+    this.verticalLogo = 'https://pic.imgdb.cn/item/630ecb8916f2c2beb176cdc7.png';
   }
 
   widgetParam = args.widgetParameter;
@@ -30,7 +30,7 @@ class Widget extends Base {
   voiceColorHex = 'F86527';
 
   ringStackSize = 61;
-  ringTextSize = 14;
+  ringTextSize = 12;
   feeTextSize = 21;
   textSize = 13;
   smallPadding = 16;
@@ -219,6 +219,7 @@ class Widget extends Base {
     const rowNumber = stack.addStack();
     rowNumber.addSpacer();
     const number = rowNumber.addText(percent ? `${data.percent}` : `${data.number}`);
+    if(data.number.toString().length>=7) this.ringTextSize=10;
     number.font = percent ? Font.systemFont(this.ringTextSize - 2) : Font.mediumSystemFont(this.ringTextSize);
     rowNumber.addSpacer();
 
@@ -396,9 +397,10 @@ class Widget extends Base {
       // updateImg.tintColor = new Color('#d7000f', 0.6);
       // updateImg.imageSize = new Size(10, 10);
       // updateStack.addSpacer(1);
+      
       const updateText = updateStack.addText(`${this.arrUpdateTime[2]}:${this.arrUpdateTime[3]}`)
       updateText.font = Font.mediumSystemFont(10);
-      updateText.textColor = new Color('#d7000f', 0.6);
+      updateText.textColor = new Color('#054391', 0.6);
 
       headerStack.addSpacer();
       w.addSpacer();
@@ -442,7 +444,7 @@ class Widget extends Base {
   }
 
   async initData(){
-    const api = 'http://10010.json';
+    const api = 'http://10000.json';
 
     let res=await this.httpGet(api, true, false);
     let data=res.data;
